@@ -15,8 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Ensure gradlew is executable
+        run: chmod +x gradlew
+
       - name: Run Lint
         run: ./gradlew lintDebug
+
+      - name: Check lint report permissions
+        run: ls -l app/build/reports
 
       - name: Upload html test report
         uses: actions/upload-artifact@v3
