@@ -19,7 +19,10 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
-          distribution: 'temurin'  # Correct distribution for JDK 17
+          distribution: 'temurin'
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
 
       - name: Run Lint
         run: ./gradlew lintDebug
