@@ -15,14 +15,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Ensure gradlew is executable
-        run: chmod +x gradlew
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adoptopenjdk'  # You can use 'temurin' or 'adoptopenjdk'
 
       - name: Run Lint
         run: ./gradlew lintDebug
-
-      - name: Check lint report permissions
-        run: ls -l app/build/reports
 
       - name: Upload html test report
         uses: actions/upload-artifact@v3
