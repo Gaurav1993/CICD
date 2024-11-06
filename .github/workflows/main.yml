@@ -24,6 +24,9 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
+      - name: Verify gradlew permissions
+        run: ls -l ./gradlew  # Verify the permissions to ensure gradlew is executable
+
       - name: Run Lint
         run: ./gradlew lintDebug
 
@@ -34,12 +37,18 @@ jobs:
           path: app/build/reports/lint-results-debug.html
 
   unit-test:
-    needs: [lint]  # This makes the 'unit-test' job depend on the 'build' job
+    needs: [lint]  # This makes the 'unit-test' job depend on the 'lint' job
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew  # Ensures gradlew is executable
+
+      - name: Verify gradlew permissions
+        run: ls -l ./gradlew  # Check gradlew file permissions in the unit-test job
 
       - name: Run tests
         run: ./gradlew testDebugUnitTest  # Run unit tests specifically
@@ -49,4 +58,3 @@ jobs:
         with:
           name: test-report
           path: app/build/reports/tests/testDebugUnitTest/index.html  # Path to test report
-
