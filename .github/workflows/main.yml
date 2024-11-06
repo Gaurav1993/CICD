@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -34,18 +34,18 @@ jobs:
           path: app/build/reports/lint-results-debug.html
 
   unit-test:
-    needs: build  # This makes the 'unit-test' job depend on the 'build' job
+    needs: [lint]  # This makes the 'unit-test' job depend on the 'build' job
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Run tests
         run: ./gradlew testDebugUnitTest  # Run unit tests specifically
 
       - name: Upload test report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: test-report
           path: app/build/reports/tests/testDebugUnitTest/index.html  # Path to test report
