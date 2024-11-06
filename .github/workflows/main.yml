@@ -54,20 +54,34 @@ jobs:
           path: app\build\reports\tests\testDebugUnitTest\index.html  # Path to unit test report
 
   instrumentation-test:
-    needs: [ unit-test ]
-    runs-on: macos-latest
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
+      needs: [ unit-test ]
+      runs-on: macos-latest
+      steps:
+        - name: Checkout the code
+          uses: actions/checkout@v2
 
-      - name: Run espresso tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          script: ./gradlew connectedCheck
+        - name: Set up JDK 17
+          uses: actions/setup-java@v3
+          with:
+            java-version: '17'
+            distribution: 'temurin'
 
-      - name: Upload test report
-        uses: actions/upload-artifact@v3
-        with:
-          name: instrumentation_test_report
-          path: app/build/reports/androidTests/connected/index.html
+        - name: Run espresso tests
+          uses: reactivecircus/android-emulator-runner@v2
+          with:
+            api-level: 29
+            script: ./gradlew connectedCheck
+            emulator-options: -no-snapshot -noaudio -no-boot-anim
+            additional-options: -no-snapshot -gpu swiftshader_indirect -writable-system
+            emulator-wait-timeout: 600  # Increase the wait timeout to 10 minutes
+
+        - name: Wait for emulator to be ready
+          run: |
+            adb -s emulator-5554 wait-for-device
+            adb shell getprop sys.boot_completed
+
+        - name: Upload test report
+          uses: actions/upload-artifact@v3
+          with:
+            name: instrumentation_test_report
+            path: app/build/reports/androidTests/connected/index.html
