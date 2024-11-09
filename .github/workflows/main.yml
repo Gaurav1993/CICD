@@ -81,7 +81,7 @@ jobs:
         mkdir C:\android-sdk\cmdline-tools\latest
 
         # Move extracted files into the 'latest' folder
-        Move-Item -Path C:\android-sdk\cmdline-tools\latest\ * -Destination C:\android-sdk\cmdline-tools\latest\ -Force
+        Move-Item -Path C:\android-sdk\cmdline-tools\latest\* -Destination C:\android-sdk\cmdline-tools\latest\ -Force
 
         # Clean up by removing the old extracted files (to avoid leftover directory structure)
         Remove-Item -Path C:\android-sdk\cmdline-tools -Recurse -Force
