@@ -73,7 +73,7 @@ jobs:
         - name: SonarCloud Scan
           run: ./gradlew sonarqube -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Auto-filled GitHub token
+            GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}  # Auto-filled GitHub token
 
         - name: Upload SonarCloud reports
           uses: actions/upload-artifact@v3
