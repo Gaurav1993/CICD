@@ -59,18 +59,18 @@ jobs:
     needs: [unit-test]  # Ensures this job runs after unit-test
     runs-on: windows-latest
     steps:
-    - name: Checkout the code
-      uses: actions/checkout@v2
+     - name: Checkout the code
+       uses: actions/checkout@v2
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
+     - name: Set up JDK 17
+       uses: actions/setup-java@v3
+       with:
         java-version: '17'
         distribution: 'temurin'
 
     # Set up Android SDK for Windows
-    - name: Install Android SDK
-      run: |
+     - name: Install Android SDK
+       run: |
         # Download command line tools and install SDK
         echo "Setting up Android SDK"
         mkdir -p C:\android-sdk
@@ -96,8 +96,8 @@ jobs:
         .\sdkmanager.bat --install "platform-tools" "build-tools;30.0.3" "platforms;android-29" "system-images;android-29;default;x86_64" "emulator"
 
     # Create and Start Emulator
-    - name: Create and Start Emulator
-      run: |
+     - name: Create and Start Emulator
+       run: |
         # Create the AVD (Android Virtual Device)
         echo "Creating AVD..."
         cd C:\android-sdk\cmdline-tools\latest\bin
@@ -124,14 +124,14 @@ jobs:
         }
 
     # Run Instrumentation Tests
-    - name: Run Instrumentation Tests
-      run: |
+     - name: Run Instrumentation Tests
+       run: |
         echo "Running Espresso tests"
         ./gradlew connectedCheck --stacktrace
 
     # Upload test report
-    - name: Upload test report
-      uses: actions/upload-artifact@v3
-      with:
+     - name: Upload test report
+       uses: actions/upload-artifact@v3
+       with:
         name: instrumentation_test_report
         path: app/build/reports/androidTests/connected/debug
