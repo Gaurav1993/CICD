@@ -6,7 +6,20 @@
         <State />
       </entry>
       <entry key="TestUiSaveData (1)">
-        <State />
+        <State>
+          <runningDeviceTargetSelectedWithDropDown>
+            <Target>
+              <type value="RUNNING_DEVICE_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="SERIAL_NUMBER" />
+                  <value value="c4fc0597" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </runningDeviceTargetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2024-11-09T19:14:18.624977700Z" />
+        </State>
       </entry>
       <entry key="app">
         <State>
