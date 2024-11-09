@@ -56,27 +56,51 @@ jobs:
 
 
   instrumentation-test:
-#    needs: [unit-test]  # If unit-test job exists and is needed
-    runs-on: macos-latest  # Runs on macOS for instrumentation tests
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up JDK 17
+      # Set up JDK
+      - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '11'
           distribution: 'temurin'
 
-      - name: Set up Android Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          script: ./gradlew connectedCheck  # Runs the Espresso tests
+      # Set up Android SDK
+      - name: Install Android SDK
+        run: |
+          sudo apt update
+          sudo apt install -y unzip
+          wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip -O /tmp/tools.zip
+          unzip /tmp/tools.zip -d $HOME/android-sdk
+          echo "y" | $HOME/android-sdk/cmdline-tools/bin/sdkmanager --licenses
+          $HOME/android-sdk/cmdline-tools/bin/sdkmanager --update
+          $HOME/android-sdk/cmdline-tools/bin/sdkmanager --install "platform-tools" "build-tools;30.0.3" "platforms;android-34" "system-images;android-34;default;x86_64" "emulator"
 
-      - name: Upload instrumentation test report
-        uses: actions/upload-artifact@v3
-        with:
-          name: instrumentation_test_report
-          path: app/build/reports/androidTests/connected/
+      # Validate SDK Installation
+      - name: Validate SDK Installation
+        run: |
+          $HOME/android-sdk/cmdline-tools/bin/sdkmanager --list
+
+      # Create and Start Emulator
+      - name: Start Emulator
+        run: |
+          echo "no" | $HOME/android-sdk/cmdline-tools/bin/avdmanager create avd -n testAVD -k "system-images;android-34;default;x86_64" --device "pixel"
+          emulator -avd testAVD -no-window -no-audio -gpu off &
+          # Wait for the emulator to boot up
+          adb wait-for-device
+
+      # Run Instrumentation Tests
+      - name: Run Instrumentation Tests
+        run: |
+          ./gradlew connectedDebugAndroidTest --stacktrace
+
+      # Stop Emulator
+      - name: Stop Emulator
+        run: |
+          adb devices
+          adb -s emulator-5554 emu kill
+          adb kill-server
