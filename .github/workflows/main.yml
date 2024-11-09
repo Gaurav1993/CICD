@@ -78,7 +78,7 @@ jobs:
         unzip /tmp/tools.zip -d $HOME/android-sdk
         
         # Create the 'cmdline-tools/latest' directory before moving the extracted contents
-       mkdir -p $HOME/android-sdk/cmdline-tools/latest
+        mkdir -p $HOME/android-sdk/cmdline-tools/latest
         
         # Move the contents from the extracted folder to the 'latest' folder, but exclude 'latest' itself
         mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/
