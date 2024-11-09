@@ -56,73 +56,82 @@ jobs:
 
 
   instrumentation-test:
-#    needs: [ unit-test ]  # Ensures this job runs after unit-test
+    needs: [unit-test]  # Ensures this job runs after unit-test
     runs-on: windows-latest
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
+    - name: Checkout the code
+      uses: actions/checkout@v2
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
 
-      # Set up Android SDK for Windows
-      - name: Install Android SDK
-        run: |
-          # Download command line tools and install SDK
-          echo "Setting up Android SDK"
-          mkdir -p C:\android-sdk
-          Invoke-WebRequest -Uri https://dl.google.com/android/repository/commandlinetools-win-7583922_latest.zip -OutFile C:\android-sdk\cmdline-tools.zip
-          Expand-Archive -Path C:\android-sdk\cmdline-tools.zip -DestinationPath C:\android-sdk
-          mkdir C:\android-sdk\cmdline-tools\latest
-          Move-Item -Path C:\android-sdk\cmdline-tools\* -Destination C:\android-sdk\cmdline-tools\latest\
-          Remove-Item -Path C:\android-sdk\cmdline-tools.zip
+    # Set up Android SDK for Windows
+    - name: Install Android SDK
+      run: |
+        # Download command line tools and install SDK
+        echo "Setting up Android SDK"
+        mkdir -p C:\android-sdk
+        Invoke-WebRequest -Uri https://dl.google.com/android/repository/commandlinetools-win-7583922_latest.zip -OutFile C:\android-sdk\cmdline-tools.zip
+        Expand-Archive -Path C:\android-sdk\cmdline-tools.zip -DestinationPath C:\android-sdk
 
-          # Accept licenses and install required components
-          cd C:\android-sdk\cmdline-tools\latest\bin
-          .\sdkmanager.bat --licenses
-          .\sdkmanager.bat --update
-          .\sdkmanager.bat --install "platform-tools" "build-tools;30.0.3" "platforms;android-29" "system-images;android-29;default;x86_64" "emulator"
+        # Create the 'latest' directory explicitly and move the files there
+        mkdir C:\android-sdk\cmdline-tools\latest
 
-      # Create and Start Emulator
-      - name: Create and Start Emulator
-        run: |
-          # Create the AVD (Android Virtual Device)
-          echo "Creating AVD..."
-          cd C:\android-sdk\cmdline-tools\latest\bin
-          .\avdmanager.bat create avd -n testAVD -k "system-images;android-29;default;x86_64" --device "pixel" --force
+        # Move extracted files into the 'latest' folder
+        Move-Item -Path C:\android-sdk\cmdline-tools\* -Destination C:\android-sdk\cmdline-tools\latest\ -Force
 
-          # Start the emulator in headless mode
-          echo "Starting the emulator..."
-          Start-Process -NoNewWindow -FilePath "C:\android-sdk\emulator\emulator.exe" -ArgumentList "-avd testAVD -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -port 5554"
+        # Clean up by removing the old extracted files (to avoid leftover directory structure)
+        Remove-Item -Path C:\android-sdk\cmdline-tools -Recurse -Force
 
-          # Wait for emulator to fully boot (this could take a few minutes)
-          echo "Waiting for emulator to boot..."
-          for ($i=1; $i -le 30; $i++) {
-            $emulatorStatus = adb devices | Select-String "emulator-5554"
-            if ($emulatorStatus) {
-              Write-Host "Emulator is ready."
-              break
-            }
-            Write-Host "Waiting for emulator to boot... ($i/30)"
-            Start-Sleep -Seconds 10
+        # Remove the zip file after extraction
+        Remove-Item -Path C:\android-sdk\cmdline-tools.zip
+
+        # Accept licenses and install required components
+        cd C:\android-sdk\cmdline-tools\latest\bin
+        .\sdkmanager.bat --licenses
+        .\sdkmanager.bat --update
+        .\sdkmanager.bat --install "platform-tools" "build-tools;30.0.3" "platforms;android-29" "system-images;android-29;default;x86_64" "emulator"
+
+    # Create and Start Emulator
+    - name: Create and Start Emulator
+      run: |
+        # Create the AVD (Android Virtual Device)
+        echo "Creating AVD..."
+        cd C:\android-sdk\cmdline-tools\latest\bin
+        .\avdmanager.bat create avd -n testAVD -k "system-images;android-29;default;x86_64" --device "pixel" --force
+
+        # Start the emulator in headless mode
+        echo "Starting the emulator..."
+        Start-Process -NoNewWindow -FilePath "C:\android-sdk\emulator\emulator.exe" -ArgumentList "-avd testAVD -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -port 5554"
+        
+        # Wait for emulator to fully boot (this could take a few minutes)
+        echo "Waiting for emulator to boot..."
+        for ($i=1; $i -le 30; $i++) {
+          $emulatorStatus = adb devices | Select-String "emulator-5554"
+          if ($emulatorStatus) {
+            Write-Host "Emulator is ready."
+            break
           }
-          if (-not $emulatorStatus) {
-            Write-Host "Timeout waiting for emulator to boot. Exiting..."
-            exit 1
-          }
+          Write-Host "Waiting for emulator to boot... ($i/30)"
+          Start-Sleep -Seconds 10
+        }
+        if (-not $emulatorStatus) {
+          Write-Host "Timeout waiting for emulator to boot. Exiting..."
+          exit 1
+        }
 
-      # Run Instrumentation Tests
-      - name: Run Instrumentation Tests
-        run: |
-          echo "Running Espresso tests"
-          ./gradlew connectedCheck --stacktrace
+    # Run Instrumentation Tests
+    - name: Run Instrumentation Tests
+      run: |
+        echo "Running Espresso tests"
+        ./gradlew connectedCheck --stacktrace
 
-      # Upload test report
-      - name: Upload test report
-        uses: actions/upload-artifact@v3
-        with:
-          name: instrumentation_test_report
-          path: app/build/reports/androidTests/connected/debug
+    # Upload test report
+    - name: Upload test report
+      uses: actions/upload-artifact@v3
+      with:
+        name: instrumentation_test_report
+        path: app/build/reports/androidTests/connected/debug
