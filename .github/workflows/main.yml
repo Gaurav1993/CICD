@@ -56,7 +56,7 @@ jobs:
 
 
   instrumentation-test:
-    needs: [unit-test]  # Ensures this job runs after unit-test
+#    needs: [unit-test]  # Ensures this job runs after unit-test
     runs-on: windows-latest
     steps:
      - name: Checkout the code
