@@ -80,9 +80,6 @@ jobs:
         - name: Make gradlew executable
           run: chmod +x ./gradlew
 
-        - name: Copy CI gradle.properties
-          run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
-
         - name: Gradle cache
           uses: actions/cache@v2
           continue-on-error: true # continue if the cache restore/upload fails
