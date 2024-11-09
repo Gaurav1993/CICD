@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("dagger.hilt.android.plugin")
     kotlin("kapt")
+    id("org.sonarqube")
 }
 
 android {
