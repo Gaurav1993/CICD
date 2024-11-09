@@ -55,54 +55,60 @@ jobs:
 
 
 
-  instrumentation-test:
-#    needs: [unit-test]  # If unit-test job exists and is needed
-    runs-on: ubuntu-latest
-    steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+instrumentation-test:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-        # Set up JDK
-        - name: Set up JDK 11
-          uses: actions/setup-java@v3
-          with:
-            java-version: '11'
-            distribution: 'temurin'
+    # Set up JDK
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
 
-        # Set up Android SDK
-        - name: Install Android SDK
-          run: |
-            sudo apt update
-            sudo apt install -y unzip
-            wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip -O /tmp/tools.zip
-            unzip /tmp/tools.zip -d $HOME/android-sdk
-            mkdir -p $HOME/android-sdk/cmdline-tools/latest  # Create the 'latest' folder
-            mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/  # Move the unzipped contents into 'latest'
-            echo "y" | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-            $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --update
-            $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --install "platform-tools" "build-tools;30.0.3" "platforms;android-34" "system-images;android-34;default;x86_64" "emulator"
+    # Set up Android SDK
+    - name: Install Android SDK
+      run: |
+        sudo apt update
+        sudo apt install -y unzip
+        wget https://dl.google.com/android/repository/commandlinetools-linux-7302050_latest.zip -O /tmp/tools.zip
+        unzip /tmp/tools.zip -d $HOME/android-sdk
+        mkdir -p $HOME/android-sdk/cmdline-tools/latest  # Create the 'latest' folder
+        mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/  # Move extracted files into 'latest'
+        rmdir $HOME/android-sdk/cmdline-tools  # Clean up the empty 'cmdline-tools' folder
+        # Accept licenses and install required components
+        echo "y" | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --update
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --install "platform-tools" "build-tools;30.0.3" "platforms;android-34" "system-images;android-34;default;x86_64" "emulator"
 
-        # Validate SDK Installation
-        - name: Validate SDK Installation
-          run: |
-            $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --list
+    # Validate SDK Installation
+    - name: Validate SDK Installation
+      run: |
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --list
 
-        # Create and Start Emulator
-        - name: Start Emulator
-          run: |
-            echo "no" | $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager create avd -n testAVD -k "system-images;android-34;default;x86_64" --device "pixel"
-            emulator -avd testAVD -no-window -no-audio -gpu off &
-            # Wait for the emulator to boot up
-            adb wait-for-device
+    # Create and Start Emulator
+    - name: Create and Start Emulator
+      run: |
+        echo "no" | $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager create avd -n testAVD -k "system-images;android-34;default;x86_64" --device "pixel" || true
+        # Start the emulator in headless mode
+        nohup $HOME/android-sdk/emulator/emulator -avd testAVD -no-window -no-audio -gpu off &  # No window, no audio
+        # Wait for the emulator to fully boot (this can take time)
+        adb wait-for-device
+        # Ensure the emulator is ready for testing (sometimes this can take a few minutes)
+        adb shell input keyevent 82  # Unlock the screen if needed
+        # Optionally, add a wait period if the emulator isn't ready in time for tests
+        sleep 30  # Wait for emulator to fully initialize
 
-        # Run Instrumentation Tests
-        - name: Run Instrumentation Tests
-          run: |
-            ./gradlew connectedDebugAndroidTest --stacktrace
+    # Run Instrumentation Tests
+    - name: Run Instrumentation Tests
+      run: |
+        ./gradlew connectedDebugAndroidTest --stacktrace
 
-        # Stop Emulator
-        - name: Stop Emulator
-          run: |
-            adb devices
-            adb -s emulator-5554 emu kill
-            adb kill-server
+    # Stop Emulator
+    - name: Stop Emulator
+      run: |
+        adb devices
+        adb -s emulator-5554 emu kill
+        adb kill-server
