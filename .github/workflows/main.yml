@@ -79,15 +79,15 @@ jobs:
 
         # Create the 'latest' directory explicitly and move the files there
         mkdir C:\android-sdk\cmdline-tools\latest
-
-        # Move extracted files into the 'latest' folder
-        Move-Item -Path C:\android-sdk\cmdline-tools\latest\* -Destination C:\android-sdk\cmdline-tools\latest\ -Force
-
-        # Clean up by removing the old extracted files (to avoid leftover directory structure)
-        Remove-Item -Path C:\android-sdk\cmdline-tools -Recurse -Force
-
-        # Remove the zip file after extraction
-        Remove-Item -Path C:\android-sdk\cmdline-tools.zip
+#
+#        # Move extracted files into the 'latest' folder
+#        Move-Item -Path C:\android-sdk\cmdline-tools\* -Destination C:\android-sdk\cmdline-tools\latest\ -Force
+#
+#        # Clean up by removing the old extracted files (to avoid leftover directory structure)
+#        Remove-Item -Path C:\android-sdk\cmdline-tools -Recurse -Force
+#
+#        # Remove the zip file after extraction
+#        Remove-Item -Path C:\android-sdk\cmdline-tools.zip
 
         # Accept licenses and install required components
         cd C:\android-sdk\cmdline-tools\latest\bin
